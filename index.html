@@ -11,7 +11,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Outfit:wght@500;600;700;800;900&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
-    <!-- GSAP & ScrollTrigger -->
+    <!-- Three.js (Minimal) & GSAP CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
 
@@ -683,6 +684,184 @@
             flex-shrink: 0;
         }
 
+        /* 3D Interactive Three.js Flight Route Module */
+        .globe-explorer-section {
+            background: radial-gradient(circle at center, #101935 0%, var(--solari-bg) 100%);
+            border-radius: var(--radius-xl);
+            padding: 30px 18px;
+            margin-bottom: 36px;
+            border: 1px solid var(--solari-border);
+            color: #ffffff;
+            box-shadow: var(--shadow-lg);
+            overflow: hidden;
+            position: relative;
+        }
+
+        @media (min-width: 850px) {
+            .globe-explorer-section {
+                padding: 40px 32px;
+            }
+        }
+
+        .globe-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 24px;
+            align-items: center;
+        }
+
+        @media (min-width: 850px) {
+            .globe-grid {
+                display: grid;
+                grid-template-columns: 1.1fr 0.9fr;
+                gap: 36px;
+            }
+        }
+
+        .globe-canvas-container {
+            width: 100%;
+            height: 250px;
+            position: relative;
+            border-radius: var(--radius-lg);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+        }
+
+        @media (min-width: 768px) {
+            .globe-canvas-container {
+                height: 380px;
+            }
+        }
+
+        .globe-canvas-container:active {
+            cursor: grabbing;
+        }
+
+        #flight-globe-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            border-radius: var(--radius-lg);
+        }
+
+        .globe-drag-hint {
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(11, 15, 25, 0.75);
+            border: 1px solid var(--solari-border);
+            color: #94a3b8;
+            font-size: 10px;
+            font-family: 'JetBrains Mono', monospace;
+            padding: 3px 10px;
+            border-radius: 20px;
+            pointer-events: none;
+        }
+
+        .globe-controls-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            width: 100%;
+        }
+
+        .destination-tab-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+
+        .dest-tab-btn {
+            background: var(--solari-card);
+            border: 1.5px solid var(--solari-border);
+            color: #cbd5e1;
+            padding: 10px 12px;
+            border-radius: var(--radius-md);
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .dest-tab-btn:hover {
+            border-color: var(--solari-yellow);
+            color: #ffffff;
+        }
+
+        .dest-tab-btn.active {
+            background: var(--navy-primary);
+            border-color: var(--crimson);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(176, 25, 32, 0.3);
+        }
+
+        .dest-detail-card {
+            background: var(--solari-card);
+            border: 1px solid var(--solari-border);
+            border-radius: var(--radius-lg);
+            padding: 18px;
+            margin-top: 4px;
+        }
+
+        .dest-detail-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .dest-detail-header h4 {
+            font-size: 17px;
+            color: #ffffff;
+        }
+
+        .dest-detail-badge {
+            background: rgba(52, 211, 153, 0.15);
+            color: var(--solari-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10.5px;
+            font-weight: 700;
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(52, 211, 153, 0.3);
+        }
+
+        .dest-detail-body {
+            font-size: 12.5px;
+            color: #94a3b8;
+            line-height: 1.5;
+            margin-bottom: 14px;
+        }
+
+        .dest-stat-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 14px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 11px;
+        }
+
+        .dest-stat-item {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .dest-stat-item strong {
+            display: block;
+            color: var(--solari-yellow);
+            font-size: 13px;
+        }
+
         /* Airport Solari Metric Board */
         .airport-metrics-board {
             background: var(--solari-bg);
@@ -796,7 +975,7 @@
             margin-top: 4px;
         }
 
-        /* Connected Travel Trajectory with SVG dashed line */
+        /* Connected Travel Trajectory */
         .trajectory-section {
             background: #ffffff;
             border-radius: var(--radius-xl);
@@ -818,7 +997,6 @@
             margin-top: 28px;
         }
 
-        /* Flight trajectory SVG ribbon */
         .flight-connector-line {
             display: none;
             width: 100%;
@@ -1494,7 +1672,8 @@
 
             <ul class="nav-menu">
                 <li><a href="#whoweare">Who We Serve</a></li>
-                <li><a href="#destinations">Countries</a></li>
+                <li><a href="#globe-routes">3D Flight Routes</a></li>
+                <li><a href="#destinations">Destinations</a></li>
                 <li><a href="#journey">Journey Steps</a></li>
                 <li><a href="#eligibility">Free Assessment</a></li>
                 <li><a href="#reviews">Success Stories</a></li>
@@ -1548,8 +1727,8 @@
                             </svg>
                             <span>Chat with Visa Expert</span>
                         </a>
-                        <a href="#journey" class="btn-secondary-outline">
-                            <span>See How It Works</span>
+                        <a href="#globe-routes" class="btn-secondary-outline">
+                            <span>Explore 3D Routes</span>
                             <span>↓</span>
                         </a>
                     </div>
@@ -1672,6 +1851,67 @@
                             Accurate documentation & filing
                         </li>
                     </ul>
+                </div>
+            </div>
+        </section>
+
+        <!-- 3D Interactive Three.js + GSAP Flight Route Explorer -->
+        <section id="globe-routes" class="globe-explorer-section">
+            <div class="section-intro" style="margin-bottom: 20px;">
+                <span class="section-eyebrow" style="color: var(--solari-yellow);">INTERACTIVE 3D RADAR</span>
+                <h2 class="section-title" style="color: #ffffff;">Explore Global Flight Routes & Destinations</h2>
+                <p class="section-desc" style="color: #cbd5e1;">
+                    Tap any country below to pivot the 3D globe and inspect travel pathways from India with MS Visa Service.
+                </p>
+            </div>
+
+            <div class="globe-grid">
+                <!-- 3D Canvas -->
+                <div class="globe-canvas-container" id="canvas-container">
+                    <canvas id="flight-globe-canvas"></canvas>
+                    <div class="globe-drag-hint">⇄ Drag to rotate globe</div>
+                </div>
+
+                <!-- Interactive Control Panel -->
+                <div class="globe-controls-panel">
+                    <div class="destination-tab-buttons">
+                        <button class="dest-tab-btn active" onclick="selectDestination('canada')">
+                            <span>🇨🇦</span> Canada
+                        </button>
+                        <button class="dest-tab-btn" onclick="selectDestination('uk')">
+                            <span>🇬🇧</span> United Kingdom
+                        </button>
+                        <button class="dest-tab-btn" onclick="selectDestination('australia')">
+                            <span>🇦🇺</span> Australia
+                        </button>
+                        <button class="dest-tab-btn" onclick="selectDestination('europe')">
+                            <span>🇪🇺</span> Europe (Germany)
+                        </button>
+                    </div>
+
+                    <div class="dest-detail-card" id="dest-detail-box">
+                        <div class="dest-detail-header">
+                            <h4 id="dest-title">Canada Study & Settle</h4>
+                            <span class="dest-detail-badge" id="dest-badge">INTAKES: SEP 2026</span>
+                        </div>
+                        <p class="dest-detail-body" id="dest-desc">
+                            Top public universities in Toronto, Vancouver & Montreal with direct post-graduation work permits and permanent residency options.
+                        </p>
+                        <div class="dest-stat-row">
+                            <div class="dest-stat-item">
+                                <span style="color: #94a3b8; font-size: 10px;">FLIGHT DURATION</span>
+                                <strong id="dest-flight">~14 hrs direct</strong>
+                            </div>
+                            <div class="dest-stat-item">
+                                <span style="color: #94a3b8; font-size: 10px;">WORK PERMIT</span>
+                                <strong id="dest-work">Up to 3 Years</strong>
+                            </div>
+                        </div>
+                        <a href="https://wa.me/919079708998?text=Hello%20MS%20Visa%20Service,%20I%20want%20to%20apply%20for%20Canada%20Study%20Visa" class="btn-primary-wa" id="dest-wa-btn" style="width: 100%; font-size: 13px; padding: 10px;" target="_blank" rel="noopener">
+                            <span>Check Admission on WhatsApp</span>
+                            <span>→</span>
+                        </a>
+                    </div>
                 </div>
             </div>
         </section>
@@ -2109,7 +2349,7 @@
         </div>
     </div>
 
-    <!-- GSAP Animations & Interactive Logic -->
+    <!-- Interactive Three.js 3D Globe + GSAP Script -->
     <script>
         // Form Submission to WhatsApp Handler
         function handleEligibilitySubmit(e) {
@@ -2124,9 +2364,265 @@
             window.open(waUrl, '_blank');
         }
 
+        // Destination Data for 3D Globe Interaction
+        const DEST_DATA = {
+            canada: {
+                title: "Canada Study & Settle",
+                badge: "INTAKES: SEP 2026",
+                desc: "Top public universities in Toronto, Vancouver & Montreal with direct post-graduation work permits and permanent residency options.",
+                flight: "~14 hrs direct",
+                work: "Up to 3 Years",
+                rotY: 2.2,
+                rotX: 0.35,
+                waText: "Hello MS Visa Service, I want to apply for Canada Study Visa"
+            },
+            uk: {
+                title: "United Kingdom (UK)",
+                badge: "FAST 1-YR MASTERS",
+                desc: "World-class education in London, Manchester & Birmingham. Options without IELTS accepted, plus 2-year Graduate Route work visa.",
+                flight: "~9 hrs direct",
+                work: "2 Years Graduate",
+                rotY: 0.7,
+                rotX: 0.45,
+                waText: "Hello MS Visa Service, I want to apply for UK Study Visa"
+            },
+            australia: {
+                title: "Australia (Group of 8)",
+                badge: "HIGH PART-TIME PAY",
+                desc: "Study in Sydney, Melbourne or Brisbane with exceptional post-study work rights and generous regional PR immigration points.",
+                flight: "~12 hrs direct",
+                work: "Up to 4 Years",
+                rotY: -1.8,
+                rotX: -0.35,
+                waText: "Hello MS Visa Service, I want to apply for Australia Study Visa"
+            },
+            europe: {
+                title: "Europe (Germany & Schengen)",
+                badge: "LOW / ZERO TUITION",
+                desc: "Affordable top-tier technical universities in Germany, France, and Europe with full 29-country Schengen visa mobility.",
+                flight: "~8.5 hrs direct",
+                work: "18 Months Job Visa",
+                rotY: 0.85,
+                rotX: 0.4,
+                waText: "Hello MS Visa Service, I want to apply for Europe Study Visa"
+            }
+        };
+
+        let globeGroup = null;
+
+        function selectDestination(key) {
+            const data = DEST_DATA[key];
+            if (!data) return;
+
+            // Update Tab UI
+            document.querySelectorAll('.dest-tab-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.textContent.toLowerCase().includes(key)) {
+                    btn.classList.add('active');
+                }
+            });
+
+            // Update Text Details
+            document.getElementById('dest-title').textContent = data.title;
+            document.getElementById('dest-badge').textContent = data.badge;
+            document.getElementById('dest-desc').textContent = data.desc;
+            document.getElementById('dest-flight').textContent = data.flight;
+            document.getElementById('dest-work').textContent = data.work;
+            document.getElementById('dest-wa-btn').href = `https://wa.me/919079708998?text=${encodeURIComponent(data.waText)}`;
+
+            // GSAP 3D Globe Rotation
+            if (globeGroup) {
+                gsap.to(globeGroup.rotation, {
+                    y: data.rotY,
+                    x: data.rotX,
+                    duration: 1.2,
+                    ease: "power2.out"
+                });
+            }
+        }
+
+        // Three.js Minimal 3D Flight Globe Initialization
+        function initMinimalThreeGlobe() {
+            const container = document.getElementById('canvas-container');
+            const canvas = document.getElementById('flight-globe-canvas');
+            if (!container || !canvas || typeof THREE === 'undefined') return;
+
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(45, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 210;
+
+            const renderer = new THREE.WebGLRenderer({ canvas: canvas, alpha: true, antialias: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+
+            globeGroup = new THREE.Group();
+            scene.add(globeGroup);
+
+            // 1. Globe Sphere Wireframe & Points
+            const radius = 68;
+            const sphereGeo = new THREE.SphereGeometry(radius, 28, 28);
+            const wireMat = new THREE.MeshBasicMaterial({
+                color: 0x1d4ed8,
+                wireframe: true,
+                transparent: true,
+                opacity: 0.18
+            });
+            const sphereMesh = new THREE.Mesh(sphereGeo, wireMat);
+            globeGroup.add(sphereMesh);
+
+            // 2. Dotted Globe Particles
+            const count = 750;
+            const particleGeo = new THREE.BufferGeometry();
+            const positions = new Float32Array(count * 3);
+            for (let i = 0; i < count; i++) {
+                const phi = Math.acos(-1 + (2 * i) / count);
+                const theta = Math.sqrt(count * Math.PI) * phi;
+                positions[i * 3] = radius * Math.cos(theta) * Math.sin(phi);
+                positions[i * 3 + 1] = radius * Math.sin(theta) * Math.sin(phi);
+                positions[i * 3 + 2] = radius * Math.cos(phi);
+            }
+            particleGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            const particleMat = new THREE.PointsMaterial({
+                color: 0x60a5fa,
+                size: 2.2,
+                transparent: true,
+                opacity: 0.65
+            });
+            const particles = new THREE.Points(particleGeo, particleMat);
+            globeGroup.add(particles);
+
+            // 3. Helper to Convert Lat/Lon to 3D Coordinates
+            function latLonToVec3(lat, lon, r) {
+                const phi = (90 - lat) * (Math.PI / 180);
+                const theta = (lon + 180) * (Math.PI / 180);
+                return new THREE.Vector3(
+                    -(r * Math.sin(phi) * Math.cos(theta)),
+                    r * Math.cos(phi),
+                    r * Math.sin(phi) * Math.sin(theta)
+                );
+            }
+
+            // India Origin (Delhi/Suratgarh area)
+            const originVec = latLonToVec3(29.5, 73.9, radius);
+
+            // Target Cities (Toronto, London, Sydney, Berlin)
+            const targets = [
+                { lat: 43.6, lon: -79.3, col: 0xfcd34d },  // Toronto
+                { lat: 51.5, lon: -0.12, col: 0xef4444 },  // London
+                { lat: -33.8, lon: 151.2, col: 0x34d399 }, // Sydney
+                { lat: 52.5, lon: 13.4, col: 0x38bdf8 }    // Berlin
+            ];
+
+            // Add Pin at Origin (Suratgarh/India)
+            const pinGeo = new THREE.SphereGeometry(2.4, 12, 12);
+            const pinMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+            const originPin = new THREE.Mesh(pinGeo, pinMat);
+            originPin.position.copy(originVec);
+            globeGroup.add(originPin);
+
+            // 4. Create Flight Arcs
+            targets.forEach(t => {
+                const targetVec = latLonToVec3(t.lat, t.lon, radius);
+                
+                // Destination Node
+                const destNode = new THREE.Mesh(pinGeo, new THREE.MeshBasicMaterial({ color: t.col }));
+                destNode.position.copy(targetVec);
+                globeGroup.add(destNode);
+
+                // Midpoint raised for 3D curved arc
+                const mid = new THREE.Vector3().addVectors(originVec, targetVec).multiplyScalar(0.5);
+                const distance = originVec.distanceTo(targetVec);
+                mid.setLength(radius + distance * 0.35);
+
+                const curve = new THREE.QuadraticBezierCurve3(originVec, mid, targetVec);
+                const points = curve.getPoints(36);
+                const arcGeo = new THREE.BufferGeometry().setFromPoints(points);
+                const arcMat = new THREE.LineBasicMaterial({
+                    color: t.col,
+                    transparent: true,
+                    opacity: 0.75,
+                    linewidth: 1.5
+                });
+                const arcLine = new THREE.Line(arcGeo, arcMat);
+                globeGroup.add(arcLine);
+            });
+
+            // Set initial rotation (centered near India/Canada arc)
+            globeGroup.rotation.y = 2.2;
+            globeGroup.rotation.x = 0.35;
+
+            // Touch / Mouse Drag Rotation Controls
+            let isDragging = false;
+            let prevMouseX = 0;
+            let prevMouseY = 0;
+
+            function onDown(clientX, clientY) {
+                isDragging = true;
+                prevMouseX = clientX;
+                prevMouseY = clientY;
+            }
+
+            function onMove(clientX, clientY) {
+                if (!isDragging || !globeGroup) return;
+                const deltaX = clientX - prevMouseX;
+                const deltaY = clientY - prevMouseY;
+                globeGroup.rotation.y += deltaX * 0.008;
+                globeGroup.rotation.x += deltaY * 0.008;
+                prevMouseX = clientX;
+                prevMouseY = clientY;
+            }
+
+            function onUp() { isDragging = false; }
+
+            canvas.addEventListener('mousedown', e => onDown(e.clientX, e.clientY));
+            window.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+            window.addEventListener('mouseup', onUp);
+
+            canvas.addEventListener('touchstart', e => {
+                if (e.touches.length === 1) onDown(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            window.addEventListener('touchmove', e => {
+                if (e.touches.length === 1) onMove(e.touches[0].clientX, e.touches[0].clientY);
+            }, { passive: true });
+
+            window.addEventListener('touchend', onUp);
+
+            // Responsive Resize
+            window.addEventListener('resize', () => {
+                if (!container || !renderer || !camera) return;
+                const w = container.clientWidth;
+                const h = container.clientHeight;
+                camera.aspect = w / h;
+                camera.updateProjectionMatrix();
+                renderer.setSize(w, h);
+            });
+
+            // Visibility Pause via IntersectionObserver (Zero CPU Waste)
+            let isVisible = true;
+            const observer = new IntersectionObserver(entries => {
+                isVisible = entries[0].isIntersecting;
+            }, { threshold: 0.1 });
+            observer.observe(container);
+
+            // Animation Loop (Slow idle spin)
+            function animate() {
+                requestAnimationFrame(animate);
+                if (!isVisible) return;
+                if (!isDragging && globeGroup) {
+                    globeGroup.rotation.y += 0.0015;
+                }
+                renderer.render(scene, camera);
+            }
+            animate();
+        }
+
         // Solari Split-Flap Ticker Scramble Animation
         document.addEventListener('DOMContentLoaded', () => {
             gsap.registerPlugin(ScrollTrigger);
+
+            // Initialize Three.js Globe
+            initMinimalThreeGlobe();
 
             const tickerEl = document.getElementById('solari-ticker');
             const messages = [
@@ -2162,7 +2658,6 @@
             setInterval(flipTicker, 4500);
 
             // GSAP Entry Animations with Safe Defaults
-            // 1. Hero Reveal
             gsap.from('.hero-heading', {
                 opacity: 0,
                 y: 20,
@@ -2186,7 +2681,7 @@
                 ease: "power2.out"
             });
 
-            // 2. Who We Serve Cards Stagger
+            // Who We Serve Cards Stagger
             gsap.utils.toArray('.serve-card').forEach((card, index) => {
                 gsap.from(card, {
                     scrollTrigger: {
@@ -2202,7 +2697,7 @@
                 });
             });
 
-            // 3. Solari Metrics Stagger
+            // Solari Metrics Stagger
             gsap.utils.toArray('.metric-solari-card').forEach((metric, index) => {
                 gsap.from(metric, {
                     scrollTrigger: {
@@ -2218,7 +2713,7 @@
                 });
             });
 
-            // 4. Journey Timeline Steps
+            // Journey Timeline Steps
             gsap.utils.toArray('.step-tile').forEach((step, index) => {
                 gsap.from(step, {
                     scrollTrigger: {
@@ -2234,7 +2729,7 @@
                 });
             });
 
-            // 5. Country Cards Stagger
+            // Country Cards Stagger
             gsap.utils.toArray('.country-showcase-card').forEach((country, index) => {
                 gsap.from(country, {
                     scrollTrigger: {
