@@ -1,0 +1,8 @@
+Place real photos in this folder using these exact filenames:
+hero_graduate.jpg          1200x1380  face-centered top
+canada_study.jpg           1280x900
+uk_europe_visa.jpg         1280x900
+australia_visa.jpg         1280x900
+europe_germany_visa.jpg    1280x900
+
+The website detects them automatically - placeholders vanish once files exist.

@@ -1,60 +1,98 @@
 #!/usr/bin/env python3
-"""1-Click Deployment to GitHub Pages for MS Visa Service."""
+"""1-Click deploy to GitHub Pages (repo: ms-visa-service-suratgarh, gh-pages branch).
 
-import os, sys, subprocess, pathlib, urllib.request, json
+Usage:
+  export GITHUB_TOKEN=ghp_xxx
+  python3 scripts/deploy_github.py
+"""
+import base64
+import json
+import mimetypes
+import os
+import sys
+import urllib.request
 
-SITE_DIR = pathlib.Path(__file__).resolve().parents[1]
-ROOT_ENV = SITE_DIR.parent / ".env"
+REPO = "ms-visa-service-suratgarh"
+ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+API = "https://api.github.com"
+
+
+def api(method, path, token, body=None, raw=False):
+    req = urllib.request.Request(API + path, method=method)
+    req.add_header("Authorization", f"Bearer {token}")
+    req.add_header("Accept", "application/vnd.github+json")
+    data = None
+    if body is not None:
+        data = json.dumps(body).encode()
+        req.add_header("Content-Type", "application/json")
+    try:
+        with urllib.request.urlopen(req, data=data) as r:
+            return json.loads(r.read() or b"{}")
+    except urllib.error.HTTPError as e:
+        print(f"  ! GitHub API {e.code}: {e.read().decode(errors='replace')[:300]}")
+        sys.exit(1)
+
 
 def main():
-    token = None
-    user = None
+    token = os.environ.get("GITHUB_TOKEN")
+    if not token:
+        sys.exit("Set GITHUB_TOKEN first: export GITHUB_TOKEN=ghp_xxx")
+    user = api("GET", "/user", token)["login"]
+    print(f"→ Authenticated as {user}")
 
-    if ROOT_ENV.exists():
-        with open(ROOT_ENV) as f:
-            for line in f:
-                line = line.strip()
-                if line.startswith("GITHUB_TOKEN="):
-                    token = line.split("=", 1)[1].strip()
-                elif line.startswith("GITHUB_USERNAME="):
-                    user = line.split("=", 1)[1].strip()
-
-    if not token or not user:
-        print("❌ GITHUB_TOKEN or GITHUB_USERNAME not found in .env")
-        return
-
-    repo_name = "ms-visa-service"
-    headers = {
-        "Authorization": f"Bearer {token}",
-        "User-Agent": "DeployScript",
-        "Accept": "application/vnd.github.v3+json"
-    }
-
-    # Ensure repo exists
-    create_url = "https://api.github.com/user/repos"
-    create_data = json.dumps({"name": repo_name, "private": False, "auto_init": False}).encode()
-    req = urllib.request.Request(create_url, data=create_data, headers=headers, method="POST")
+    existing = api("GET", f"/repos/{user}/{REPO}", token) if False else None
     try:
-        urllib.request.urlopen(req)
-        print(f"✓ Created repository: {repo_name}")
-    except Exception:
+        import contextlib
+        with contextlib.suppress(SystemExit):
+            pass
+        req = urllib.request.Request(f"{API}/repos/{user}/{REPO}")
+        req.add_header("Authorization", f"Bearer {token}")
+        try:
+            with urllib.request.urlopen(req):
+                print(f"→ Repo {REPO} exists")
+        except urllib.error.HTTPError as e:
+            if e.code == 404:
+                print(f"→ Creating repo {REPO}…")
+                api("POST", "/user/repos", token, {"name": REPO, "private": False})
+            else:
+                raise
+    finally:
         pass
 
-    # Push to gh-pages branch
-    subprocess.run(["git", "init"], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "config", "user.name", user], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "config", "user.email", "deploy@example.com"], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "add", "."], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "commit", "-m", "Production release of MS Visa Service website"], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "branch", "-M", "gh-pages"], cwd=SITE_DIR, capture_output=True)
+    files = []
+    for dirpath, _, names in os.walk(ROOT):
+        for n in names:
+            full = os.path.join(dirpath, n)
+            rel = os.path.relpath(full, ROOT)
+            if rel.startswith(("scripts", ".git")) or n.startswith("."):
+                continue
+            files.append((full, rel.replace(os.sep, "/")))
+    print(f"→ Publishing {len(files)} files to gh-pages…")
 
-    remote_url = f"https://{user}:{token}@github.com/{user}/{repo_name}.git"
-    subprocess.run(["git", "remote", "remove", "origin"], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "remote", "add", "origin", remote_url], cwd=SITE_DIR, capture_output=True)
-    subprocess.run(["git", "push", "-u", "origin", "gh-pages", "--force"], cwd=SITE_DIR, capture_output=True)
+    ref = api("GET", f"/repos/{user}/{REPO}/git/ref/heads/gh-pages", token)
+    commit = ref["object"]["sha"]
+    base_tree = api("GET", f"/repos/{user}/{REPO}/git/commits/{commit}", token)["tree"]["sha"]
 
-    live_url = f"https://{user.lower()}.github.io/{repo_name}/"
-    print(f"\n🎉 Successfully Deployed to GitHub Pages! Live URL: {live_url}")
+    tree_items = []
+    for full, rel in files:
+        with open(full, "rb") as f:
+            blob = api("POST", f"/repos/{user}/{REPO}/git/blobs", token,
+                       {"content": base64.b64encode(f.read()).decode(), "encoding": "base64"})
+        tree_items.append({"path": rel, "mode": "100644", "type": "blob", "sha": blob["sha"]})
+        print(f"   · {rel}")
+
+    tree = api("POST", f"/repos/{user}/{REPO}/git/trees", token,
+               {"base_tree": base_tree, "tree": tree_items})
+    new_commit = api("POST", f"/repos/{user}/{REPO}/git/commits", token,
+                     {"message": "Deploy MS Visa Service portal",
+                      "tree": tree["sha"], "parents": [commit]})
+    api("PATCH", f"/repos/{user}/{REPO}/git/refs/heads/gh-pages", token,
+        {"sha": new_commit["sha"]})
+
+    pages = api("GET", f"/repos/{user}/{REPO}/pages", token)
+    url = pages.get("html_url", f"https://{user}.github.io/{REPO}/")
+    print(f"\n✅ Live at: {url}")
+
 
 if __name__ == "__main__":
     main()
